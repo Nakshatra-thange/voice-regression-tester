@@ -46,6 +46,8 @@ model Agent {
   authHeader  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  adapterType   String  @default("generic_json")
+  requestConfig Json?
 
   testRuns TestRun[]
 

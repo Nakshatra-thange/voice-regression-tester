@@ -912,7 +912,9 @@ export const AgentScalarFieldEnum = {
   baseUrl: 'baseUrl',
   authHeader: 'authHeader',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  adapterType: 'adapterType',
+  requestConfig: 'requestConfig'
 } as const
 
 export type AgentScalarFieldEnum = (typeof AgentScalarFieldEnum)[keyof typeof AgentScalarFieldEnum]
@@ -1020,14 +1022,6 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -1035,6 +1029,14 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -1072,20 +1074,6 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
- * Reference to a field of type 'TestMode'
- */
-export type EnumTestModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestMode'>
-    
-
-
-/**
- * Reference to a field of type 'TestMode[]'
- */
-export type ListEnumTestModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestMode[]'>
-    
-
-
-/**
  * Reference to a field of type 'Json'
  */
 export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -1096,6 +1084,20 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'TestMode'
+ */
+export type EnumTestModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestMode'>
+    
+
+
+/**
+ * Reference to a field of type 'TestMode[]'
+ */
+export type ListEnumTestModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestMode[]'>
     
 
 
