@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TestMode {
+  SCRIPTED
+  GOAL_DRIVEN
+}
+
+enum TurnRole {
+  CALLER
+  AGENT
+  SYSTEM
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  PASSED
+  FAILED
+  ERROR
+}
+
+enum AssertionType {
+  CONTAINS_KEYWORD
+  NOT_CONTAINS_KEYWORD
+  REGEX_MATCH
+  TOOL_CALLED
+  TOOL_NOT_CALLED
+  MAX_TURNS
+  MAX_LATENCY_MS
+  LLM_JUDGE
+}
+
+// The system under test — your reference agents now, Bolna/Fonio/anything later.
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  baseUrl     String
+  authHeader  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  testRuns TestRun[]
+
+  @@map("agents")
+}
+
+// A reusable scenario: a persona + what "correct" looks like.
+model TestCase {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  mode          TestMode
+  personaPrompt String
+  scriptedTurns Json?    // string[] — only used when mode = SCRIPTED
+  goal          String?  // only used when mode = GOAL_DRIVEN
+  maxTurns      Int      @default(8)
+  tags          String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  assertions Assertion[]
+  testRuns   TestRun[]
+
+  @@map("test_cases")
+}
+
+// One pass/fail rule attached to a TestCase. `config` shape depends on `type` — validated in app code (Step 7).
+model Assertion {
+  id          String        @id @default(cuid())
+  testCaseId  String
+  testCase    TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  type        AssertionType
+  config      Json
+  description String?
+  createdAt   DateTime      @default(now())
+
+  results AssertionResult[]
+
+  @@map("assertions")
+}
+
+// One execution of a TestCase against an Agent. isBaseline marks the "known good" run to diff future runs against.
+model TestRun {
+  id             String    @id @default(cuid())
+  testCaseId     String
+  testCase       TestCase  @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  agentId        String
+  agent          Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  status         RunStatus @default(PENDING)
+  configVersion  String?   // e.g. git SHA or prompt version under test
+  isBaseline     Boolean   @default(false)
+  totalLatencyMs Int?
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  turns            Turn[]
+  assertionResults AssertionResult[]
+
+  @@index([testCaseId, agentId, isBaseline])
+  @@map("test_runs")
+}
+
+// Full transcript, turn by turn, for a given run.
+model Turn {
+  id         String   @id @default(cuid())
+  testRunId  String
+  testRun    TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  turnNumber Int
+  role       TurnRole
+  content    String
+  toolCalls  Json?
+  latencyMs  Int?
+  createdAt  DateTime @default(now())
+
+  @@map("turns")
+}
+
+// The actual pass/fail outcome per assertion per run.
+model AssertionResult {
+  id          String    @id @default(cuid())
+  testRunId   String
+  testRun     TestRun   @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  assertionId String
+  assertion   Assertion @relation(fields: [assertionId], references: [id], onDelete: Cascade)
+  passed      Boolean
+  actualValue String?
+  message     String?
+  createdAt   DateTime  @default(now())
+
+  @@map("assertion_results")
+}
