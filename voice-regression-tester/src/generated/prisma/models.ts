@@ -8,10 +8,10 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Agent.js'
-export type * from './models/TestCase.js'
-export type * from './models/Assertion.js'
-export type * from './models/TestRun.js'
-export type * from './models/Turn.js'
-export type * from './models/AssertionResult.js'
-export type * from './commonInputTypes.js'
+export type * from './models/Agent'
+export type * from './models/TestCase'
+export type * from './models/Assertion'
+export type * from './models/TestRun'
+export type * from './models/Turn'
+export type * from './models/AssertionResult'
+export type * from './commonInputTypes'

@@ -2,7 +2,8 @@
 import { db } from "../lib/db.js";
 import { runTestCase } from "../run-test-case.js";
 import { diffAgainstBaseline } from "../baselines/diff-runs.js";
-import { printDiff } from "../baselines/set-baseline.js";
+import { printDiff } from "../baselines/print-diff.js";
+import { setBaseline } from "../baselines/set-baseline.js";
 
 async function main() {
   const testCase = await db.testCase.findFirstOrThrow({ where: { name: "Book a cleaning - happy path" } });

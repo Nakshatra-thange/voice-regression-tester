@@ -1,6 +1,6 @@
 // src/run-e2e.ts
 import { db } from "./lib/db.js";
-import { runTestCase } from "./run-test-case";
+import { runTestCase } from "./run-test-case.js";
 
 async function main() {
   const testCase = await db.testCase.findFirstOrThrow({ where: { name: "Book a cleaning - happy path" } });
