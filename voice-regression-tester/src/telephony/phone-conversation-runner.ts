@@ -1,38 +1,51 @@
 // src/telephony/phone-conversation-runner.ts
-import { TwilioClient } from "./twilio-client.js";
-import { CallSession } from "./call-session.js";
-import { callSessionRegistry } from "./call-session-registry.js";
-import { MockTTSProvider } from "./tts.js";
-import { MockSTTProvider } from "./stt.js";
+import { randomUUID } from "node:crypto";
+import type { TestCase } from "../generated/prisma/client.js";
+import type { ConversationTurn } from "../adapters/types.js";
+import type { ConversationResult, RecordedTurn } from "../simulation/conversation-runner.js";
+import { buildCallerSimulator } from "../simulation/factory.js";
+import { placeTestCall } from "./twilio-client.js";
+import { registerCallSession } from "./call-session-registry.js";
 
-export interface PhoneRunnerConfig {
-  phoneNumber: string;
-  webhookUrl: string;
-  testRunId: string;
-}
+export async function runPhoneConversation(testCase: TestCase, targetPhoneNumber: string): Promise<ConversationResult> {
+  const sessionId = randomUUID();
+  const session = registerCallSession(sessionId);
 
-export class PhoneConversationRunner {
-  private tts = new MockTTSProvider();
-  private stt = new MockSTTProvider();
+  await placeTestCall(targetPhoneNumber, sessionId);
+  await session.waitUntilReady();
 
-  constructor(private twilioClient: TwilioClient) {}
+  const caller = buildCallerSimulator(testCase); // same Phase 3 interface — nothing new here
+  const history: ConversationTurn[] = [];
+  const turns: RecordedTurn[] = [];
+  let totalLatencyMs = 0, turnNumber = 0, exchangeCount = 0;
+  let lastAgentReply: string | null = null;
 
-  async runPhoneTest(config: PhoneRunnerConfig): Promise<CallSession> {
-    const { callSid } = await this.twilioClient.initiateCall(
-      config.phoneNumber,
-      config.webhookUrl
-    );
+  try {
+    while (exchangeCount < testCase.maxTurns) {
+      const callerUtterance = await caller.nextUtterance(history, lastAgentReply);
+      if (callerUtterance === null) return { turns, totalLatencyMs, endedReason: "goal_or_script_complete" };
 
-    const session = new CallSession(callSid, config.testRunId);
-    callSessionRegistry.register(session);
+      turnNumber++;
+      turns.push({ turnNumber, role: "caller", content: callerUtterance });
+      history.push({ role: "caller", content: callerUtterance });
+      await session.speak(callerUtterance);
 
-    // Simulate initial spoken prompt
-    session.addTurn("CALLER", "Hello, I would like to make a reservation.");
-    const audio = await this.tts.synthesize("Hello, I would like to make a reservation.");
-    const text = await this.stt.transcribe(audio);
-    session.addTurn("AGENT", text);
+      const speakFinishedAt = Date.now();
+      const reply = await session.listenForReply();
+      const latencyMs = reply.text ? Date.now() - speakFinishedAt : reply.latencyMs;
 
-    session.complete();
-    return session;
+      turnNumber++;
+      const content = reply.text || "[no response — agent stayed silent]";
+      turns.push({ turnNumber, role: "agent", content, latencyMs });
+      history.push({ role: "agent", content });
+      totalLatencyMs += latencyMs;
+      lastAgentReply = content;
+
+      if (!reply.text) return { turns, totalLatencyMs, endedReason: "agent_error" };
+      exchangeCount++;
+    }
+    return { turns, totalLatencyMs, endedReason: "max_turns_reached" };
+  } finally {
+    session.close();
   }
 }

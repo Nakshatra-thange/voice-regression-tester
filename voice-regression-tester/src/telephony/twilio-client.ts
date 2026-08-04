@@ -1,21 +1,15 @@
 // src/telephony/twilio-client.ts
-export interface TwilioConfig {
-  accountSid: string;
-  authToken: string;
-  fromNumber: string;
-}
+import "dotenv/config";
+import Twilio from "twilio";
 
-export class TwilioClient {
-  constructor(private config: TwilioConfig) {}
+const client = Twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
 
-  async initiateCall(to: string, webhookUrl: string): Promise<{ callSid: string }> {
-    console.log(`[TwilioClient] Initiating call to ${to} with webhook ${webhookUrl}...`);
-    // Simulated Twilio call dispatch
-    const callSid = `CA${Math.random().toString(36).substring(2, 15)}`;
-    return { callSid };
-  }
-
-  async hangup(callSid: string): Promise<void> {
-    console.log(`[TwilioClient] Terminating call ${callSid}...`);
-  }
+// We place the call TO the agent under test — same as any real caller would.
+export async function placeTestCall(targetPhoneNumber: string, sessionId: string) {
+  const publicUrl = process.env.PUBLIC_SERVER_URL!;
+  return client.calls.create({
+    to: targetPhoneNumber,
+    from: process.env.TWILIO_PHONE_NUMBER!,
+    url: `${publicUrl}/twiml?sessionId=${sessionId}`,
+  });
 }
