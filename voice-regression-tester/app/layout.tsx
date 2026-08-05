@@ -1,40 +1,34 @@
-import "./globals.css";
+// app/layout.tsx
+import type { Metadata } from "next";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
-import React from "react";
+import "./globals.css";
 
-export const metadata = {
-  title: "Voice Regression Tester Dashboard",
-  description: "Automated regression testing & evaluation suite for voice agents",
-};
+const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600"], variable: "--font-display" });
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-mono" });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const metadata: Metadata = { title: "Voice Regression Lab" };
+
+const GLASS_PANEL = "border border-glass-border bg-glass-fill backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_50px_-20px_rgba(0,0,0,0.7)]";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-[#0b0f17] text-[#f1f5f9] antialiased">
-        <header className="border-b border-[#232b3b] bg-[#141a24]/80 backdrop-blur sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
-                V
-              </div>
-              <span className="font-semibold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                Voice Regression Tester
-              </span>
+    <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
+      <body className={`${inter.className} relative min-h-screen overflow-x-hidden bg-[radial-gradient(ellipse_at_top,_var(--color-page-bg-1),_var(--color-page-bg-2)_65%)] text-ink font-light`}>
+        {/* single restrained ambient glow — no more color-blob soup */}
+        <div aria-hidden className="pointer-events-none fixed left-1/2 top-0 -z-10 h-80 w-[40rem] -translate-x-1/2 rounded-full bg-amber/20 blur-[130px]" />
+
+        <div className="flex min-h-screen p-6 gap-6">
+          <aside className={`w-60 shrink-0 h-fit sticky top-6 rounded-[28px] ${GLASS_PANEL} p-5`}>
+            <Link href="/" className={`${plexMono.className} block text-xs tracking-widest text-ink-muted uppercase mb-8`}>
+              Voice Regression Lab
             </Link>
-            <nav className="flex gap-6 text-sm font-medium text-[#94a3b8]">
-              <Link href="/" className="hover:text-white transition-colors">
-                Dashboard
-              </Link>
+            <nav className="space-y-1 text-sm font-normal">
+              <Link href="/" className="block rounded-2xl px-3 py-2 hover:bg-white/[0.06] transition-colors">Test cases</Link>
             </nav>
-          </div>
-        </header>
-        <main className="max-w-7xl mx-auto px-6 py-8">
-          {children}
-        </main>
+          </aside>
+          <main className="flex-1">{children}</main>
+        </div>
       </body>
     </html>
   );

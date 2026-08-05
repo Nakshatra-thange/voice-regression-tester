@@ -5,15 +5,16 @@
   "main": "src/cli.ts",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "cli": "tsx src/cli.ts",
-    "worker": "tsx src/queue/worker.ts",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push"
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "agent": "tsx src/reference-agents/booking-agent.ts",
+  "worker": "tsx src/queue/worker.ts",
+  "seed": "tsx scripts/seed.ts",
+  "promote-baselines": "tsx scripts/promote-baselines.ts",
+  "test:voice": "tsx src/cli.ts",
+  "dev:all": "concurrently -n agent,worker,web -c blue,magenta,green \"npm:agent\" \"npm:worker\" \"npm:dev\""
+},
   "keywords": [
     "voice-agent",
     "regression-testing",
@@ -49,6 +50,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
+    "concurrently": "^10.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "prisma": "^7.9.1",

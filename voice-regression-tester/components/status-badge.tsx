@@ -1,46 +1,32 @@
-import React from "react";
+// components/status-badge.tsx
+import clsx from "clsx";
 
-type RunStatus = "PENDING" | "RUNNING" | "PASSED" | "FAILED" | "ERROR";
+type Status = "PENDING" | "RUNNING" | "PASSED" | "FAILED" | "ERROR";
 
-interface StatusBadgeProps {
-  status: RunStatus | string;
-}
+const COLOR_CLASS: Record<Status, string> = {
+  PENDING: "text-ink-muted",
+  RUNNING: "text-periwinkle",
+  PASSED: "text-sage",
+  FAILED: "text-rose",
+  ERROR: "text-rose",
+};
+const BARS: Record<Status, number[]> = {
+  PENDING: [3, 3, 3, 3, 3],
+  RUNNING: [4, 8, 5, 9, 4],
+  PASSED: [6, 8, 7, 8, 6],
+  FAILED: [9, 2, 8, 3, 9],
+  ERROR: [9, 2, 8, 3, 9],
+};
 
-export function StatusBadge({ status }: StatusBadgeProps) {
-  const normalized = status.toUpperCase();
-
-  let styles = "bg-slate-800 text-slate-300 border-slate-700";
-  let dotColor = "bg-slate-400";
-
-  switch (normalized) {
-    case "PASSED":
-      styles = "bg-emerald-950/80 text-emerald-300 border-emerald-800/60";
-      dotColor = "bg-emerald-400";
-      break;
-    case "FAILED":
-      styles = "bg-rose-950/80 text-rose-300 border-rose-800/60";
-      dotColor = "bg-rose-400";
-      break;
-    case "RUNNING":
-      styles = "bg-amber-950/80 text-amber-300 border-amber-800/60 animate-pulse";
-      dotColor = "bg-amber-400";
-      break;
-    case "ERROR":
-      styles = "bg-red-950/80 text-red-300 border-red-800/60";
-      dotColor = "bg-red-400";
-      break;
-    case "PENDING":
-      styles = "bg-slate-900 text-slate-400 border-slate-800";
-      dotColor = "bg-slate-500";
-      break;
-  }
-
+export function StatusBadge({ status }: { status: Status }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${styles}`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-      {normalized}
+    <span className="inline-flex items-center gap-2 rounded-full border border-glass-border bg-white/[0.06] backdrop-blur-md px-3 py-1.5">
+      <svg width="28" height="12" viewBox="0 0 28 12" aria-hidden className={COLOR_CLASS[status]}>
+        {BARS[status].map((h, i) => (
+          <rect key={i} x={i * 6} y={(12 - h) / 2} width="3" height={h} rx="1.5" className={clsx("fill-current", status === "RUNNING" && "animate-pulse")} style={{ animationDelay: `${i * 80}ms` }} />
+        ))}
+      </svg>
+      <span className={clsx("font-mono text-xs tracking-wide", COLOR_CLASS[status])}>{status}</span>
     </span>
   );
 }
