@@ -1,51 +1,23 @@
+// components/pass-fail-trend.tsx
 "use client";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-import React from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  CartesianGrid,
-} from "recharts";
+const TOOLTIP_STYLE = { background: "rgba(20,21,24,0.95)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, fontSize: 12, color: "#EDEEF0" };
 
-interface TrendDataPoint {
-  date: string;
-  passed: number;
-  failed: number;
-}
-
-interface PassFailTrendProps {
-  data: TrendDataPoint[];
-}
-
-export function PassFailTrend({ data }: PassFailTrendProps) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="h-64 flex items-center justify-center text-slate-500 text-sm border border-[#232b3b] rounded-xl bg-[#141a24]">
-        No trend data available
-      </div>
-    );
-  }
+export function PassFailTrend({ runs }: { runs: { id: string; status: string; startedAt: string }[] }) {
+  const data = runs.map((r, i) => ({ index: i + 1, value: r.status === "PASSED" ? 1 : 0, label: new Date(r.startedAt).toLocaleDateString() }));
+  if (data.length < 2) return null;
 
   return (
-    <div className="h-64 w-full p-4 border border-[#232b3b] rounded-xl bg-[#141a24]">
-      <h3 className="text-sm font-medium text-slate-400 mb-4">Pass / Fail Trend</h3>
-      <ResponsiveContainer width="100%" height="80%">
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#232b3b" />
-          <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
-          <YAxis stroke="#94a3b8" fontSize={12} allowDecimals={false} />
-          <Tooltip
-            contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#232b3b", color: "#f1f5f9" }}
-          />
-          <Legend />
-          <Bar dataKey="passed" fill="#10b981" radius={[4, 4, 0, 0]} name="Passed" />
-          <Bar dataKey="failed" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Failed" />
-        </BarChart>
+    <div className="rounded-3xl border border-glass-border bg-glass-fill backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_50px_-20px_rgba(0,0,0,0.7)] p-5">
+      <div className="text-xs font-mono text-ink-muted uppercase tracking-wide mb-2">Pass rate trend</div>
+      <ResponsiveContainer width="100%" height={100}>
+        <LineChart data={data} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+          <XAxis dataKey="index" hide />
+          <YAxis domain={[0, 1]} hide />
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => (v === 1 ? "Passed" : "Failed")} labelFormatter={(_l, p) => p?.[0]?.payload?.label ?? ""} />
+          <Line type="stepAfter" dataKey="value" stroke="#8FBF9F" strokeWidth={2} dot={{ r: 3, fill: "#8FBF9F", strokeWidth: 0 }} />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
