@@ -6,7 +6,8 @@ import { connection } from "./queue/connection.js";
 import { randomUUID } from "node:crypto";
 
 export async function runSuite(opts: { agentId: string; configVersion: string; tag?: string }) {
-  const testCases = await db.testCase.findMany({ where: opts.tag ? { tags: { has: opts.tag } } : {} });
+  const allTestCases = await db.testCase.findMany();
+const testCases = opts.tag ? allTestCases.filter((tc) => tc.tags.includes(opts.tag!)) : allTestCases;
   if (testCases.length === 0) throw new Error("No test cases matched — nothing to run.");
 
   const suiteRunId = randomUUID();

@@ -71,5 +71,6 @@ app.post("/chat", async (req, res) => {
   const result: ChatResponseBody = { content, toolCalls, latencyMs };
   res.json(result);
 });
+app.get("/health", (_req, res) => res.sendStatus(200));
 
 app.listen(4001, () => console.log("Booking reference agent listening on :4001"));
