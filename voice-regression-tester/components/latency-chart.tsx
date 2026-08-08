@@ -15,7 +15,7 @@ export function LatencyChart({ turns }: { turns: { turnNumber: number; role: str
         <BarChart data={agentTurns}>
           <XAxis dataKey="turnNumber" tick={{ fontSize: 10, fill: "#8A8F98" }} tickFormatter={(v) => `T${v}`} />
           <YAxis tick={{ fontSize: 10, fill: "#8A8F98" }} width={40} />
-          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${v}ms`, "Latency"]} labelFormatter={(l) => `Turn ${l}`} />
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${Number(v ?? 0)}ms`, "Latency"]} labelFormatter={(l) => `Turn ${l}`} />
           <Bar dataKey="latencyMs" radius={[6, 6, 0, 0]}>
             {agentTurns.map((t, i) => <Cell key={i} fill={t.latencyMs > 4000 ? "#E38B85" : "#7C93B0"} />)}
           </Bar>

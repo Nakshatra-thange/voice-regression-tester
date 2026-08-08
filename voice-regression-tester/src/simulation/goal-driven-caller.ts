@@ -28,12 +28,20 @@ Never break character or mention you are an AI or a test.
 Call end_call once your goal is achieved, or if you'd realistically give up and hang up.`;
 
     // From this LLM's own point of view: its past speech = "assistant", agent's replies = "user".
-    const messages: Anthropic.MessageParam[] = history.map((t) => ({
-      role: t.role === "caller" ? ("assistant" as const) : ("user" as const),
-      content: t.content,
-    }));
+    // Tool-only agent responses have no text. Anthropic rejects an empty message,
+    // so retain the tool call in the recorded transcript but omit it from caller context.
+    const messages: Anthropic.MessageParam[] = history
+      .filter((t) => t.content.trim().length > 0)
+      .map((t) => ({
+        role: t.role === "caller" ? ("assistant" as const) : ("user" as const),
+        content: t.content,
+      }));
     if (messages.length === 0) {
       messages.push({ role: "user", content: "(The phone starts ringing. Say your opening line.)" });
+    } else if (messages.at(-1)?.role === "assistant") {
+      // A tool-only agent response was omitted above. Supply a valid conversational
+      // cue instead of attempting an unsupported assistant prefill.
+      messages.push({ role: "user", content: "(The agent has not said anything else. Continue the call naturally.)" });
     }
 
     const response = await anthropic.messages.create({

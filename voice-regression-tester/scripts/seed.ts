@@ -1,11 +1,13 @@
 // scripts/seed.ts
 import { db } from "../src/lib/db.js";
 
+const REFERENCE_AGENT_ID = "ref-agent-booking";
+
 async function upsertAgent() {
-  const existing = await db.agent.findFirst({ where: { name: "Reference Booking Agent" } });
-  if (existing) return existing;
-  return db.agent.create({
-    data: { name: "Reference Booking Agent", baseUrl: "http://localhost:4001", adapterType: "reference_http" },
+  return db.agent.upsert({
+    where: { id: REFERENCE_AGENT_ID },
+    update: { name: "Reference Booking Agent", baseUrl: "http://localhost:4001", adapterType: "reference_http", authHeader: null, requestConfig: undefined },
+    create: { id: REFERENCE_AGENT_ID, name: "Reference Booking Agent", baseUrl: "http://localhost:4001", adapterType: "reference_http" },
   });
 }
 

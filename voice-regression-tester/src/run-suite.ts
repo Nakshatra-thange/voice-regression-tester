@@ -7,7 +7,10 @@ import { randomUUID } from "node:crypto";
 
 export async function runSuite(opts: { agentId: string; configVersion: string; tag?: string }) {
   const allTestCases = await db.testCase.findMany();
-const testCases = opts.tag ? allTestCases.filter((tc) => tc.tags.includes(opts.tag!)) : allTestCases;
+  const tag = opts.tag;
+  // Filter JSON/array data in-process. This avoids provider/adapter-specific array
+  // operators and is negligible at suite-discovery scale.
+  const testCases = tag ? allTestCases.filter((tc) => tc.tags.includes(tag)) : allTestCases;
   if (testCases.length === 0) throw new Error("No test cases matched — nothing to run.");
 
   const suiteRunId = randomUUID();

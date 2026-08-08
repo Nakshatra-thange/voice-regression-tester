@@ -15,7 +15,7 @@ export function PassFailTrend({ runs }: { runs: { id: string; status: string; st
         <LineChart data={data} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
           <XAxis dataKey="index" hide />
           <YAxis domain={[0, 1]} hide />
-          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => (v === 1 ? "Passed" : "Failed")} labelFormatter={(_l, p) => p?.[0]?.payload?.label ?? ""} />
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => (Number(v ?? 0) === 1 ? "Passed" : "Failed")} labelFormatter={(_l, p) => p?.[0]?.payload?.label ?? ""} />
           <Line type="stepAfter" dataKey="value" stroke="#8FBF9F" strokeWidth={2} dot={{ r: 3, fill: "#8FBF9F", strokeWidth: 0 }} />
         </LineChart>
       </ResponsiveContainer>

@@ -10,31 +10,39 @@ export async function runTestCase(testCaseId: string, agentId: string, configVer
   const agent = await db.agent.findUniqueOrThrow({ where: { id: agentId } });
 
   const run = await db.testRun.create({ data: { testCaseId, agentId, status: "RUNNING", configVersion } as any});
-  const result = await runConversation(testCase, getAdapterForAgent(agent));
+  try {
+    const result = await runConversation(testCase, getAdapterForAgent(agent));
 
-  await db.turn.createMany({
-    data: result.turns.map((t) => ({
-      testRunId: run.id,
-      turnNumber: t.turnNumber,
-      role: t.role.toUpperCase() as "CALLER" | "AGENT",
-      content: t.content,
-      toolCalls: t.toolCalls ?? undefined,
-      latencyMs: t.latencyMs,
-    })as any),
-  });
-
-  let allPassed = result.endedReason !== "agent_error";
-  for (const assertion of testCase.assertions) {
-    const config = AssertionConfigSchema.parse(assertion.config);
-    const evalResult = await evaluateAssertion(config, result);
-    allPassed &&= evalResult.passed;
-    await db.assertionResult.create({
-      data: { testRunId: run.id, assertionId: assertion.id, passed: evalResult.passed, actualValue: evalResult.actualValue, message: evalResult.message} as any,
+    await db.turn.createMany({
+      data: result.turns.map((t) => ({
+        testRunId: run.id,
+        turnNumber: t.turnNumber,
+        role: t.role.toUpperCase() as "CALLER" | "AGENT",
+        content: t.content,
+        toolCalls: t.toolCalls ?? undefined,
+        latencyMs: t.latencyMs,
+      }) as any),
     });
-  }
 
-  return db.testRun.update({
-    where: { id: run.id },
-    data: { status: allPassed ? "PASSED" : "FAILED", totalLatencyMs: result.totalLatencyMs, completedAt: new Date() },
-  });
+    let allPassed = result.endedReason !== "agent_error";
+    for (const assertion of testCase.assertions) {
+      const config = AssertionConfigSchema.parse(assertion.config);
+      const evalResult = await evaluateAssertion(config, result);
+      allPassed &&= evalResult.passed;
+      await db.assertionResult.create({
+        data: { testRunId: run.id, assertionId: assertion.id, passed: evalResult.passed, actualValue: evalResult.actualValue, message: evalResult.message } as any,
+      });
+    }
+
+    return db.testRun.update({
+      where: { id: run.id },
+      data: { status: allPassed ? "PASSED" : "FAILED", totalLatencyMs: result.totalLatencyMs, completedAt: new Date() },
+    });
+  } catch (error) {
+    await db.testRun.update({
+      where: { id: run.id },
+      data: { status: "ERROR", completedAt: new Date() },
+    });
+    throw error;
+  }
 }
